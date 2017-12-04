@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.os.Handler;
+import android.widget.Toast;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -69,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case PERMISSIONS_REQUEST_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getContentsInfo();
+                }else{
+                    Toast.makeText(this, "パーミッションが拒否されたのでアプリを終了します。", Toast.LENGTH_LONG).show();
+                    finish();
                 }
                 break;
             default:
@@ -80,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // 画像の情報を取得する
         ContentResolver resolver = getContentResolver();
-         cursor = resolver.query(
+        cursor = resolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類
                 null, // 項目(null = 全項目)
                 null, // フィルタ条件(null = フィルタなし)
@@ -90,25 +94,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (cursor.moveToFirst()) {
 
-                int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+            int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
 
-                Long id = cursor.getLong(fieldIndex);
-                Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+            Long id = cursor.getLong(fieldIndex);
+            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-                ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
-                imageVIew.setImageURI(imageUri);
+            ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+            imageVIew.setImageURI(imageUri);
 
         }
         //cursor.close();
     }
 
 
-
-
     @Override
     public void onClick(View v) {
 
-        if(v.getId() == R.id.go){
+        if (v.getId() == R.id.go) {
             if (cursor.moveToNext()) {
 
                 int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
@@ -119,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
                 imageVIew.setImageURI(imageUri);
 
-            }else{
+            } else {
                 cursor.moveToFirst();
                 int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
 
@@ -129,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
                 imageVIew.setImageURI(imageUri);
             }
-        }else if(v.getId() == R.id.back){
+        } else if (v.getId() == R.id.back) {
             if (cursor.moveToPrevious()) {
 
                 int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
@@ -140,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
                 imageVIew.setImageURI(imageUri);
 
-            }else{
+            } else {
                 cursor.moveToLast();
                 int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
 
@@ -150,20 +152,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
                 imageVIew.setImageURI(imageUri);
             }
-        }else if(v.getId() == R.id.playbackstop) {
+        } else if (v.getId() == R.id.playbackstop) {
 
             Button go = (Button) findViewById(R.id.go);
-            go.setEnabled(false);
-
             Button back = (Button) findViewById(R.id.back);
+            Button playbackstop = (Button) findViewById(R.id.playbackstop);
+
+            if (mTimer == null) {
+
+
+
+            go.setEnabled(false);
             back.setEnabled(false);
 
-            Button playbackstop = (Button) findViewById(R.id.playbackstop);
             playbackstop.setText("停止");
 
             toggleTimer();
 
-            if (v.getId() == R.id.playbackstop) {
+        }else{
 
                 go.setEnabled(true);
 
@@ -172,15 +178,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 playbackstop.setText("再生");
 
                 mTimer.cancel();
-
+                mTimer = null;
             }
 
         }
     }
 
+
+
     private void toggleTimer(){
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         // タイマーの作成
         mTimer = new Timer();
@@ -188,19 +194,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                mTimerSec += 0.1;
-
                 mHandler.post(new Runnable() {
                     @Override
-                    public void{
-                        cursor.moveToNext();
-                        int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                    public void run(){
+                        if (cursor.moveToNext()) {
 
-                        Long id = cursor.getLong(fieldIndex);
-                        Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                            int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
 
-                        ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
-                        imageVIew.setImageURI(imageUri);
+                            Long id = cursor.getLong(fieldIndex);
+                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                            ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                            imageVIew.setImageURI(imageUri);
+
+                        } else {
+                            cursor.moveToFirst();
+                            int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+
+                            Long id = cursor.getLong(fieldIndex);
+                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                            ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
+                            imageVIew.setImageURI(imageUri);
+                        }
                     }
                 });
             }
